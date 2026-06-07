@@ -1,58 +1,256 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🗺️ GoJatim Travel API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Proyek UAS Pemrograman API** — Aplikasi pemesanan paket wisata berbasis REST API menggunakan Laravel, JWT Authorization, dan API Key Authentication.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 👨‍💻 Informasi Mahasiswa
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Field | Detail |
+|---|---|
+| Nama | Billy Bayhakhi |
+| Aplikasi | GoJatim Travel API |
+| Framework | Laravel 13.x |
+| Autentikasi | JWT (tymon/jwt-auth) + API Key |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## ⚙️ Cara Menjalankan Project
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone repository
+git clone <url-repo>
 
-php artisan boost:install
+# 2. Install dependencies
+composer install
+
+# 3. Salin file environment
+cp .env.example .env
+
+# 4. Generate key & JWT secret
+php artisan key:generate
+php artisan jwt:secret
+
+# 5. Sesuaikan konfigurasi database di .env
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# 6. Buat tabel dan isi data awal
+php artisan migrate --seed
+
+# 7. Jalankan server
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## 🔐 Metode Autentikasi
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Project ini menggunakan **dua lapis autentikasi**:
 
-## Code of Conduct
+| Metode | Digunakan Untuk | Cara Penggunaan |
+|---|---|---|
+| **JWT Bearer Token** | Endpoint privat (profil, booking) | Header: `Authorization: Bearer <token>` |
+| **API Key** | Endpoint publik (destinations, tours) | Header: `X-API-Key: <api_key>` |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 📌 Daftar Endpoint API
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 🔓 Auth (Publik — Tanpa Token)
 
-## License
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Daftar akun baru |
+| `POST` | `/api/v1/auth/login` | Login dan dapatkan JWT Token |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Contoh Request — Register
+```json
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Billy Bayhakhi",
+  "email": "billy@example.com",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+```
+
+#### Contoh Request — Login
+```json
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "billy@example.com",
+  "password": "password123"
+}
+```
+
+#### Contoh Response — Login Berhasil
+```json
+{
+  "success": true,
+  "data": {
+    "user": { "id": 1, "name": "Billy Bayhakhi", ... },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "type": "bearer",
+    "expires_in": "3600 detik"
+  }
+}
+```
+
+---
+
+### 🔒 Auth (Privat — Butuh JWT Token)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/v1/auth/me` | Lihat profil & riwayat booking user yang login |
+| `POST` | `/api/v1/auth/logout` | Logout dan invalidasi token |
+| `POST` | `/api/v1/auth/refresh` | Refresh JWT Token |
+
+---
+
+### 🗝️ API Keys (Privat — Butuh JWT Token)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/v1/api-keys` | Lihat semua API Key milik user |
+| `POST` | `/api/v1/api-keys` | Buat API Key baru |
+| `DELETE` | `/api/v1/api-keys/{id}` | Hapus API Key |
+
+---
+
+### 🏝️ Destinations (Publik — Butuh API Key)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/v1/destinations` | Lihat semua destinasi wisata |
+| `GET` | `/api/v1/destinations/{id}` | Lihat detail 1 destinasi |
+| `POST` | `/api/v1/destinations` | Tambah destinasi baru |
+| `PUT` | `/api/v1/destinations/{id}` | Update destinasi |
+| `DELETE` | `/api/v1/destinations/{id}` | Hapus destinasi |
+
+#### Contoh Request — Tambah Destinasi
+```json
+POST /api/v1/destinations
+X-API-Key: <api_key_anda>
+Content-Type: application/json
+
+{
+  "name": "Pantai Papuma",
+  "kabupaten": "Jember",
+  "provinsi": "Jawa Timur",
+  "description": "Pantai eksotis dengan batuan karang yang indah di Jember."
+}
+```
+
+---
+
+### 🧳 Tours / Paket Wisata (Publik — Butuh API Key)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/v1/tours` | Lihat semua paket tour |
+| `GET` | `/api/v1/tours/{id}` | Lihat detail 1 paket tour |
+| `POST` | `/api/v1/tours` | Tambah paket tour baru |
+| `PUT` | `/api/v1/tours/{id}` | Update paket tour |
+| `DELETE` | `/api/v1/tours/{id}` | Hapus paket tour |
+
+#### Contoh Request — Tambah Paket Tour
+```json
+POST /api/v1/tours
+X-API-Key: <api_key_anda>
+Content-Type: application/json
+
+{
+  "category_id": 1,
+  "title": "Trip 2 Hari Kawah Ijen",
+  "description": "Menyaksikan fenomena blue fire yang memukau.",
+  "duration_days": 2,
+  "max_people": 10,
+  "price": 950000
+}
+```
+
+---
+
+### 📅 Booking (Privat — Butuh JWT Token)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `POST` | `/api/v1/bookings` | Buat pemesanan paket tour baru |
+
+#### Contoh Request — Buat Booking
+```json
+POST /api/v1/bookings
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "tour_id": 1,
+  "check_in": "2026-07-15",
+  "jumlah_orang": 3,
+  "catatan": "Mohon persiapkan raincoat"
+}
+```
+
+#### Contoh Response — Booking Berhasil
+```json
+{
+  "success": true,
+  "message": "Pemesanan berhasil dibuat",
+  "data": {
+    "booking_code": "TRX-ABCD1234",
+    "tour_id": 1,
+    "check_in": "2026-07-15",
+    "jumlah_orang": 3,
+    "total_harga": 1050000,
+    "status": "pending"
+  }
+}
+```
+
+---
+
+## 🗄️ Struktur Database (ERD Singkat)
+
+```
+users ──────────< bookings >────── tours ──────────< destination_tour >────── destinations
+  |                                  |
+  └──────────< api_keys              └──── categories
+  
+blogs ──────── destinations
+```
+
+| Tabel | Relasi |
+|---|---|
+| `users` | hasMany bookings, hasMany api_keys |
+| `tours` | belongsTo category, belongsToMany destinations, hasMany bookings |
+| `bookings` | belongsTo user, belongsTo tour |
+| `destinations` | belongsToMany tours, hasMany blogs |
+| `api_keys` | belongsTo user |
+
+---
+
+## 🧪 Testing dengan Postman
+
+Urutan pengujian yang disarankan:
+
+1. **Register** → `POST /api/v1/auth/register`
+2. **Login** → `POST /api/v1/auth/login` → Simpan `token`
+3. **Buat API Key** → `POST /api/v1/api-keys` (gunakan token dari langkah 2) → Simpan `key`
+4. **CRUD Destinations** → Gunakan `X-API-Key` dari langkah 3
+5. **CRUD Tours** → Gunakan `X-API-Key` dari langkah 3
+6. **Buat Booking** → `POST /api/v1/bookings` (gunakan `Authorization: Bearer <token>`)
+7. **Cek Profil** → `GET /api/v1/auth/me` (lihat riwayat booking)
+
+---
+
+## 📁 Lampiran
+
+- 🔗 **GitHub Repository:** *(link repository Anda)*
+- 🧪 **Postman Collection:** https://billybayhakhi1-2418430.postman.co/...
