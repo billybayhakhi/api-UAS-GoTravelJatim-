@@ -71,6 +71,50 @@ class AuthController extends Controller
         ]);
     }
 
+    // ── UPDATE PROFILE ───────────────────────────────
+    public function updateProfile(Request $request)
+    {
+        $user = auth('api')->user();
+
+        $validator = Validator::make($request->all(), [
+            'name'  => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user->update($request->only(['name', 'email', 'phone']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui',
+            'data'    => $user,
+        ]);
+    }
+
+    // ── DELETE ACCOUNT ───────────────────────────────
+    public function deleteAccount()
+    {
+        $user = auth('api')->user();
+        
+        // Optional: hapus token JWT yang aktif saat ini
+        auth('api')->logout();
+
+        // Hapus user dari database (cascade delete pada tabel relasi jika diset)
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun berhasil dihapus permanen',
+        ]);
+    }
+
     // ── LOGOUT ───────────────────────────────────────
     public function logout()
     {

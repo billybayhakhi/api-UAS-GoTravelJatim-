@@ -44,6 +44,8 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     // Profile & auth
     Route::prefix('auth')->group(function () {
         Route::get('me',      [AuthController::class, 'me']);
+        Route::put('me',      [AuthController::class, 'updateProfile']);
+        Route::delete('me',   [AuthController::class, 'deleteAccount']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
     });

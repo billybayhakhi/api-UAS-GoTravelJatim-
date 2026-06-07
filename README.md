@@ -109,6 +109,8 @@ Content-Type: application/json
 | Method | Endpoint | Deskripsi |
 |---|---|---|
 | `GET` | `/api/v1/auth/me` | Lihat profil & riwayat booking user yang login |
+| `PUT` | `/api/v1/auth/me` | Update profil user yang login |
+| `DELETE` | `/api/v1/auth/me` | Hapus akun secara permanen |
 | `POST` | `/api/v1/auth/logout` | Logout dan invalidasi token |
 | `POST` | `/api/v1/auth/refresh` | Refresh JWT Token |
 

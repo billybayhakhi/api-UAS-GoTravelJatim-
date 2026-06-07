@@ -275,22 +275,95 @@
         }
         #profileContent { display: none; }
         
-        /* Logout Button */
-        .btn-logout {
+        /* Actions Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             margin-top: 30px;
+        }
+        .btn-action {
             width: 100%;
             padding: 12px;
-            background: white;
-            border: 1px solid #fee2e2;
-            color: #ef4444;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .btn-edit {
+            background: rgba(15, 23, 42, 0.05);
+            color: var(--primary);
+        }
+        .btn-edit:hover {
+            background: rgba(15, 23, 42, 0.1);
+        }
+        .btn-logout {
+            background: white;
+            border: 1px solid #fee2e2;
+            color: #ef4444;
         }
         .btn-logout:hover {
             background: #fee2e2;
         }
+        .btn-delete {
+            background: transparent;
+            color: #dc2626;
+            font-size: 13px;
+        }
+        .btn-delete:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 30px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover, .close:focus { color: black; text-decoration: none; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'DM Sans'; }
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { background: var(--primary-light); }
     </style>
 </head>
 <body>
@@ -335,12 +408,20 @@
                         <div class="info-value"><i class="fas fa-envelope"></i> <span id="display-email">-</span></div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">No. Telepon</div>
+                        <div class="info-value"><i class="fas fa-phone"></i> <span id="display-phone">-</span></div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">Bergabung Sejak</div>
                         <div class="info-value"><i class="fas fa-calendar-alt"></i> <span id="display-joined">-</span></div>
                     </div>
                 </div>
 
-                <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                <div class="action-buttons">
+                    <button class="btn-action btn-edit" onclick="openEditModal()"><i class="fas fa-edit"></i> Edit Profil</button>
+                    <button class="btn-action btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                    <button class="btn-action btn-delete" onclick="deleteAccount()"><i class="fas fa-trash-alt"></i> Hapus Akun Permanen</button>
+                </div>
             </div>
 
             <!-- Main Content -->
@@ -355,7 +436,29 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--primary);">Edit Profil</h3>
+            <form id="editForm" onsubmit="submitEditProfile(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="edit-email" required>
+                </div>
+                <div class="form-group">
+                    <label>No. Telepon</label>
+                    <input type="text" id="edit-phone">
+                </div>
+                <button type="submit" class="btn-submit" id="btn-save-profile">Simpan Perubahan</button>
+            </form>
         </div>
     </div>
 
@@ -365,6 +468,87 @@
                 localStorage.removeItem('jwt_token');
                 localStorage.removeItem('user_name');
                 window.location.href = '/login';
+            }
+        }
+
+        async function deleteAccount() {
+            if(confirm('PERINGATAN: Apakah Anda yakin ingin menghapus akun secara permanen? Semua data riwayat pemesanan akan hilang dan tidak dapat dikembalikan.')) {
+                const token = localStorage.getItem('jwt_token');
+                try {
+                    const response = await fetch('/api/v1/auth/me', {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        alert('Akun berhasil dihapus.');
+                        localStorage.removeItem('jwt_token');
+                        localStorage.removeItem('user_name');
+                        window.location.href = '/';
+                    } else {
+                        alert('Gagal menghapus akun.');
+                    }
+                } catch (e) {
+                    alert('Terjadi kesalahan koneksi.');
+                }
+            }
+        }
+
+        function openEditModal() {
+            document.getElementById('edit-name').value = document.getElementById('display-name').textContent;
+            document.getElementById('edit-email').value = document.getElementById('display-email').textContent;
+            let phone = document.getElementById('display-phone').textContent;
+            document.getElementById('edit-phone').value = phone === '-' ? '' : phone;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        async function submitEditProfile(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-profile');
+            btn.textContent = 'Menyimpan...';
+            btn.disabled = true;
+
+            const token = localStorage.getItem('jwt_token');
+            const data = {
+                name: document.getElementById('edit-name').value,
+                email: document.getElementById('edit-email').value,
+                phone: document.getElementById('edit-phone').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/auth/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert('Profil berhasil diperbarui!');
+                    // Update UI
+                    document.getElementById('display-name').textContent = result.data.name;
+                    document.getElementById('display-email').textContent = result.data.email;
+                    document.getElementById('display-phone').textContent = result.data.phone || '-';
+                    closeEditModal();
+                } else {
+                    alert('Gagal memperbarui profil: ' + (result.message || 'Data tidak valid.'));
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan koneksi.');
+            } finally {
+                btn.textContent = 'Simpan Perubahan';
+                btn.disabled = false;
             }
         }
 
@@ -391,6 +575,7 @@
                     document.getElementById('display-name').textContent = user.name;
                     document.getElementById('display-email').textContent = user.email;
                     document.getElementById('display-id').textContent = 'USR-' + String(user.id).padStart(4, '0');
+                    document.getElementById('display-phone').textContent = user.phone ? user.phone : '-';
                     
                     const dateObj = new Date(user.created_at);
                     document.getElementById('display-joined').textContent = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
@@ -404,7 +589,6 @@
                             const checkInDate = new Date(book.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                             const rpTotal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(book.total_harga);
                             
-                            // Fixed the undefined issue here by calling book.tour.title instead of name
                             const tourName = book.tour && book.tour.title ? book.tour.title : 'Paket Tour Custom';
                             
                             const html = `
