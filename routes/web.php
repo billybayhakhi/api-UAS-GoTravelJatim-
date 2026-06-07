@@ -21,10 +21,23 @@ Route::get('/trip/{id}', function($id) {
 })->where('id', '[1-5]');
 
 use App\Models\Tour;
+use App\Models\Blog;
 
 Route::get('/booking/{id}', function($id) {
     $tour = Tour::findOrFail($id);
     return view('booking', compact('tour'));
+});
+
+// Blog routes
+Route::get('/blog', function () {
+    $blogs = Blog::with('destination')->where('is_published', true)->orderByDesc('published_at')->get();
+    return view('blog', compact('blogs'));
+});
+
+Route::get('/blog/{slug}', function ($slug) {
+    $blog = Blog::with(['author', 'destination'])->where('slug', $slug)->where('is_published', true)->firstOrFail();
+    $related = Blog::where('id', '!=', $blog->id)->where('is_published', true)->latest()->take(3)->get();
+    return view('blog-detail', compact('blog', 'related'));
 });
 
 Route::get('/about', function () {
